@@ -1,0 +1,176 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* === Admission Here Brand Colors === */
+  /* Navy Blue from "ADMISSION" logo text */
+  --primary: 223 71% 24%;          /* #1a3068 deep navy */
+  --primary-foreground: 0 0% 100%;
+  
+  /* Red from "HERE" logo text */
+  --brand-red: 0 76% 40%;          /* #C41E1E */
+  --brand-red-light: 0 76% 95%;
+  
+  /* Green from checkmark in logo */
+  --brand-green: 140 60% 30%;      /* #1F8040 */
+  --brand-green-light: 140 60% 95%;
+  
+  --background: 210 20% 98%;
+  --foreground: 220 30% 10%;
+  --card: 0 0% 100%;
+  --card-foreground: 220 30% 10%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 220 30% 10%;
+  
+  --secondary: 220 20% 94%;
+  --secondary-foreground: 223 71% 24%;
+  --muted: 220 16% 93%;
+  --muted-foreground: 220 12% 48%;
+  
+  /* Accent using a soft navy tint */
+  --accent: 223 40% 92%;
+  --accent-foreground: 223 71% 24%;
+  
+  --destructive: 0 76% 40%;
+  --destructive-foreground: 0 0% 100%;
+  
+  --border: 220 20% 88%;
+  --input: 220 20% 88%;
+  --ring: 223 71% 24%;
+  --radius: 0.5rem;
+  
+  /* Gradient helpers */
+  --gradient-brand: linear-gradient(135deg, #1a3068 0%, #1e4db7 60%, #c41e1e 100%);
+  --gradient-navy: linear-gradient(135deg, #0f1f4a 0%, #1a3068 100%);
+}
+
+.dark {
+  --background: 220 30% 8%;
+  --foreground: 210 40% 95%;
+  --card: 220 30% 10%;
+  --card-foreground: 210 40% 95%;
+  --popover: 220 30% 10%;
+  --popover-foreground: 210 40% 95%;
+  --primary: 223 65% 55%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 220 25% 15%;
+  --secondary-foreground: 210 40% 95%;
+  --muted: 220 25% 15%;
+  --muted-foreground: 215 20% 60%;
+  --accent: 220 25% 18%;
+  --accent-foreground: 210 40% 95%;
+  --destructive: 0 70% 45%;
+  --destructive-foreground: 210 40% 98%;
+  --border: 220 25% 18%;
+  --input: 220 25% 18%;
+  --ring: 223 65% 55%;
+}
+
+* {
+  border-color: hsl(var(--border));
+}
+
+body {
+  color: hsl(var(--foreground));
+  background: hsl(var(--background));
+  font-feature-settings: "rlig" 1, "calt" 1;
+}
+
+/* === Admission Here Brand Utility Classes === */
+.brand-navy { color: #1a3068; }
+.brand-red  { color: #c41e1e; }
+.brand-green { color: #1f8040; }
+
+.bg-brand-navy { background-color: #1a3068; }
+.bg-brand-red  { background-color: #c41e1e; }
+.bg-brand-green { background-color: #1f8040; }
+
+.btn-brand-primary {
+  background: linear-gradient(135deg, #1a3068, #1e4db7);
+  color: #fff;
+  transition: opacity 0.2s;
+}
+.btn-brand-primary:hover { opacity: 0.92; }
+
+.btn-brand-red {
+  background: linear-gradient(135deg, #c41e1e, #e53935);
+  color: #fff;
+  transition: opacity 0.2s;
+}
+.btn-brand-red:hover { opacity: 0.92; }
+
+/* Animated gradient hero background */
+.hero-gradient {
+  background: linear-gradient(135deg, #0f1f4a 0%, #1a3068 40%, #1e3a8a 70%, #7c1010 100%);
+}
+
+/* Navbar shadow matching brand */
+.nav-shadow {
+  box-shadow: 0 2px 12px rgba(26, 48, 104, 0.10);
+}
+
+/* Card hover lift */
+.card-hover {
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+.card-hover:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 28px rgba(26, 48, 104, 0.13);
+}
+
+/* Admin sidebar gradient */
+.admin-sidebar-bg {
+  background: linear-gradient(180deg, #0f1f4a 0%, #1a3068 100%);
+}
+
+/* Badge styles */
+.badge-navy {
+  background: rgba(26, 48, 104, 0.10);
+  color: #1a3068;
+  font-weight: 600;
+}
+.badge-red {
+  background: rgba(196, 30, 30, 0.10);
+  color: #c41e1e;
+  font-weight: 600;
+}
+.badge-green {
+  background: rgba(31, 128, 64, 0.10);
+  color: #1f8040;
+  font-weight: 600;
+}
+
+/* === Mobile Responsiveness & Touch Optimization === */
+/* Hide scrollbar while preserving touch swipe scroll */
+.no-scrollbar::-webkit-scrollbar,
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar,
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Smooth momentum scrolling on iOS / Android */
+.touch-scroll {
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+}
+
+/* Mobile sticky bottom bar elevation */
+.mobile-bottom-bar {
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.08);
+  padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+}
+
+/* Minimum touch targets for mobile accessibility (44px min recommended) */
+@media (max-width: 640px) {
+  button, 
+  a.touch-target {
+    min-height: 38px;
+  }
+}
+
+

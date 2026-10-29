@@ -1,0 +1,322 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["fullTextSearchPostgres"]
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum UserRole {
+  STUDENT
+  AUTHOR
+  COLLEGE_ADMIN
+  SUPER_ADMIN
+  STAFF
+}
+
+enum OwnershipType {
+  PUBLIC_GOVERNMENT
+  PRIVATE
+  DEEMED
+  AUTONOMOUS
+}
+
+enum PostStatus {
+  DRAFT
+  IN_REVIEW
+  SCHEDULED
+  PUBLISHED
+  ARCHIVED
+}
+
+enum BlogCategory {
+  EXAM_NEWS
+  ADMISSION_ALERT
+  CUTOFF_ANALYSIS
+  COLLEGE_ROUNDUP
+  CAREER_GUIDE
+  SCHOLARSHIP
+}
+
+enum LeadCtaType {
+  DOWNLOAD_BROCHURE
+  APPLY_NOW
+  CHECK_ELIGIBILITY
+  RANK_PREDICTOR
+  AI_COUNSELOR
+  BLOG_INLINE_CTA
+}
+
+enum LeadStatus {
+  NEW
+  OTP_VERIFIED
+  ASSIGNED_TO_COUNSELOR
+  CONTACTED
+  APPLICATION_SUBMITTED
+  ENROLLED
+  INVALID
+}
+
+model User {
+  id               String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name             String
+  email            String       @unique
+  phone            String?      @unique
+  phoneVerified    Boolean      @default(false)
+  passwordHash     String?
+  role             UserRole     @default(STUDENT)
+  targetStream     String?
+  examScores       Json?        // e.g., { "jee_main_rank": 42500, "category": "GEN", "home_state": "Odisha" }
+  managedCollegeId String?      @db.Uuid
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+
+  blogPosts        BlogPost[]
+  reviews          Review[]
+  leads            Lead[]
+  staffPermission  StaffPermission?
+}
+
+model StaffPermission {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId      String   @unique @db.Uuid
+  permissions String[] // e.g. ["colleges", "exams", "blogs", "reviews", "leads", "seo-geo"]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model College {
+  id              String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  slug            String        @unique
+  name            String
+  shortName       String?
+  logoUrl         String?
+  coverImageUrl   String?
+  brochurePdfUrl  String?
+  city            String
+  state           String
+  pincode         String?
+  latitude        Float?
+  longitude       Float?
+  estYear         Int?
+  ownershipType   OwnershipType
+  affiliatedTo    String?
+  approvedBy      String[]      // ["AICTE", "UGC", "NAAC", "NBA"]
+  naacGrade       String?       // e.g., "A++"
+  nirfRank        Int?
+  campusAreaAcres Float?
+  overviewHtml    String        @db.Text
+  admissionHtml   String?       @db.Text
+  facilitiesJson  Json?         // Hostels, Labs, Library, Sports, Wi-Fi
+  galleryUrls     String[]
+  faqsJson        Json?         // Array of { question, answer } for FAQPage JSON-LD
+  ratingOverall   Float         @default(0)
+  reviewCount     Int           @default(0)
+  isFeatured      Boolean       @default(false)
+  isPublished     Boolean       @default(true)
+  searchTsv       Unsupported("tsvector")?
+  embedding       Unsupported("vector")?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  courses         CollegeCourse[]
+  placements      PlacementStat[]
+  rankings        AgencyRanking[]
+  reviews         Review[]
+  blogPosts       BlogPost[]
+  leads           Lead[]
+
+  @@index([state, city, nirfRank])
+  @@index([ownershipType, isPublished])
+}
+
+model Course {
+  id          String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  slug        String          @unique
+  stream      String          // Engineering, Management, Medical, Law, Architecture, Design
+  degree      String          // B.Tech, M.Tech, MBA, MBBS, B.Arch, LLB
+  fullName    String
+  durationYrs Float
+  level       String          // UG, PG, Diploma, Doctoral
+  offerings   CollegeCourse[]
+}
+
+model CollegeCourse {
+  id                  String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  collegeId           String       @db.Uuid
+  courseId            String       @db.Uuid
+  specialization      String       // e.g., "Computer Science & Engineering (AI & ML)"
+  totalFeesInr        Int          // Total tuition fee in INR for range filtering
+  firstYearFeesInr    Int?
+  hostelFeesYearlyInr Int?
+  intakeSeats         Int?
+  acceptedExamSlugs   String[]     // ["jee-main", "ojee"]
+  eligibilityCriteria Json         // { min_12th_pct: 60, mandatory_subjects: ["Physics", "Maths"] }
+  syllabusPdfUrl      String?
+
+  college             College      @relation(fields: [collegeId], references: [id], onDelete: Cascade)
+  course              Course       @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  cutoffs             ExamCutoff[]
+
+  @@index([collegeId, totalFeesInr])
+}
+
+model Exam {
+  id                String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  slug              String       @unique // e.g., "jee-main", "neet-ug", "cat", "gate"
+  name              String
+  conductingBody    String
+  stream            String
+  examLevel         String       // National, State, University
+  applicationStart  DateTime?
+  applicationEnd    DateTime?
+  examDate          DateTime?
+  resultDate        DateTime?
+  overviewHtml      String       @db.Text
+  syllabusHtml      String?      @db.Text
+  patternJson       Json?
+  cutoffs           ExamCutoff[]
+  blogPosts         BlogPost[]
+}
+
+model ExamCutoff {
+  id               String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  examId           String        @db.Uuid
+  collegeCourseId  String        @db.Uuid
+  academicYear     Int           // e.g., 2026, 2025, 2024
+  counselingRound  Int           // 1, 2, 3, Spot
+  category         String        // GEN, OBC, SC, ST, EWS
+  quota            String        // AI (All India), HS (Home State), OS (Other State)
+  gender           String        @default("Gender-Neutral")
+  openingRank      Int?
+  closingRank      Int?
+  cutoffPercentile Float?
+
+  exam             Exam          @relation(fields: [examId], references: [id], onDelete: Cascade)
+  collegeCourse    CollegeCourse @relation(fields: [collegeCourseId], references: [id], onDelete: Cascade)
+
+  @@index([examId, category, quota, closingRank])
+}
+
+model PlacementStat {
+  id                  String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  collegeId           String   @db.Uuid
+  batchYear           Int
+  highestPackageInr   BigInt
+  averagePackageInr   BigInt
+  medianPackageInr    BigInt
+  placementPercentage Float
+  totalOffers         Int?
+  topRecruiters       String[] // ["TCS", "Microsoft", "Deloitte", "Amazon"]
+
+  college             College  @relation(fields: [collegeId], references: [id], onDelete: Cascade)
+
+  @@unique([collegeId, batchYear])
+}
+
+model AgencyRanking {
+  id          String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  collegeId   String  @db.Uuid
+  agencyName  String  // NIRF, IIRF, India Today, Outlook, The Week, QS
+  category    String  // Engineering, Overall, MBA
+  rankingYear Int
+  rankNumber  Int
+  outOfTotal  Int?
+
+  college     College @relation(fields: [collegeId], references: [id], onDelete: Cascade)
+}
+
+model Review {
+  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  collegeId        String   @db.Uuid
+  userId           String   @db.Uuid
+  courseName       String
+  batchYear        Int
+  ratingOverall    Float
+  ratingPlacements Float
+  ratingInfra      Float
+  ratingFaculty    Float
+  ratingValueRoi   Float
+  title            String
+  prosText         String   @db.Text
+  consText         String   @db.Text
+  idCardProofUrl   String?
+  isVerified       Boolean  @default(false)
+  moderationStatus String   @default("PENDING") // PENDING, APPROVED, REJECTED
+  createdAt        DateTime @default(now())
+
+  college          College  @relation(fields: [collegeId], references: [id], onDelete: Cascade)
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([collegeId, isVerified, moderationStatus])
+}
+
+model BlogPost {
+  id               String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  slug             String       @unique
+  title            String
+  metaTitle        String?
+  metaDescription  String?
+  tldrSummary      String[]     // 4-bullet AI/GEO Answer Box at top of blog post
+  contentMdx       String       @db.Text
+  featuredImageUrl String?
+  category         BlogCategory
+  tags             String[]
+  status           PostStatus   @default(DRAFT)
+  isLiveBlog       Boolean      @default(false)
+  liveUpdatesJson  Json?        // Array of { id, timestamp, headline, bodyHtml, isPinned }
+  faqsJson         Json?        // Array of { question, answer } for FAQPage JSON-LD
+  authorId         String       @db.Uuid
+  relatedCollegeId String?      @db.Uuid
+  relatedExamId    String?      @db.Uuid
+  viewCount        Int          @default(0)
+  publishedAt      DateTime?
+  searchTsv        Unsupported("tsvector")?
+  embedding        Unsupported("vector")?
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+
+  author           User         @relation(fields: [authorId], references: [id])
+  relatedCollege   College?     @relation(fields: [relatedCollegeId], references: [id], onDelete: SetNull)
+  relatedExam      Exam?        @relation(fields: [relatedExamId], references: [id], onDelete: SetNull)
+  generatedLeads   Lead[]
+
+  @@index([status, category, publishedAt(sort: Desc)])
+}
+
+model Lead {
+  id              String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId          String?     @db.Uuid
+  studentName     String
+  phone           String
+  email           String
+  city            String?
+  state           String?
+  targetStream    String
+  targetDegree    String?
+  examRankInfo    String?
+  targetCollegeId String?     @db.Uuid
+  sourceBlogId    String?     @db.Uuid
+  sourceUrl       String
+  ctaType         LeadCtaType
+  utmSource       String?
+  utmMedium       String?
+  utmCampaign     String?
+  status          LeadStatus  @default(NEW)
+  counselorNotes  String?     @db.Text
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  user            User?       @relation(fields: [userId], references: [id])
+  targetCollege   College?    @relation(fields: [targetCollegeId], references: [id])
+  sourceBlog      BlogPost?   @relation(fields: [sourceBlogId], references: [id])
+
+  @@index([targetCollegeId, status, createdAt(sort: Desc)])
+  @@index([sourceBlogId, ctaType])
+}
+
