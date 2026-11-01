@@ -1,10 +1,19 @@
 import Link from "next/link";
 import { db } from "@/lib/db";
-import { Plus, Edit, Eye, Radio, Sparkles } from "lucide-react";
+import { Plus, Edit, Eye, Radio, Trash2, EyeOff } from "lucide-react";
 import { checkAdminAccess } from "@/lib/auth/staff-guard";
 import { StaffAccessDenied } from "@/components/admin/StaffAccessDenied";
+import { AdminBlogActions } from "./AdminBlogActions";
 
 export const revalidate = 0;
+
+const STATUS_STYLES: Record<string, string> = {
+  PUBLISHED: "bg-emerald-100 text-emerald-800",
+  DRAFT: "bg-amber-100 text-amber-800",
+  IN_REVIEW: "bg-blue-100 text-blue-800",
+  SCHEDULED: "bg-purple-100 text-purple-800",
+  ARCHIVED: "bg-gray-100 text-gray-700",
+};
 
 export default async function AdminBlogsPage() {
   const access = await checkAdminAccess("blogs");
@@ -48,17 +57,34 @@ export default async function AdminBlogsPage() {
         </div>
       </div>
 
+      {/* Stats row */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        {[
+          { label: "Total Posts", value: posts.length, color: "#1a3068" },
+          { label: "Published", value: posts.filter((p) => p.status === "PUBLISHED").length, color: "#1f8040" },
+          { label: "Drafts", value: posts.filter((p) => p.status === "DRAFT").length, color: "#b45309" },
+          { label: "Live Blogs", value: posts.filter((p) => p.isLiveBlog).length, color: "#c41e1e" },
+        ].map((stat) => (
+          <div key={stat.label} className="bg-card border rounded-xl p-4 shadow-xs">
+            <p className="text-[11px] font-semibold text-muted-foreground">{stat.label}</p>
+            <p className="text-2xl font-black mt-1" style={{ color: stat.color }}>
+              {stat.value}
+            </p>
+          </div>
+        ))}
+      </div>
+
       <div className="bg-card border rounded-2xl overflow-hidden shadow-xs">
         <div className="overflow-x-auto touch-scroll">
           <table className="w-full text-left text-xs">
             <thead className="bg-muted/50 border-b font-bold text-muted-foreground uppercase text-[10px] tracking-wider">
               <tr>
-                <th className="p-4">Title & Slug</th>
+                <th className="p-4">Title &amp; Slug</th>
                 <th className="p-4">Category</th>
                 <th className="p-4">Author</th>
                 <th className="p-4">Status</th>
                 <th className="p-4">Reads</th>
-                <th className="p-4">Leads Generated</th>
+                <th className="p-4">Leads</th>
                 <th className="p-4 text-right">Actions</th>
               </tr>
             </thead>
@@ -79,19 +105,25 @@ export default async function AdminBlogsPage() {
                         </span>
                       )}
                     </div>
+                    {post.featuredImageUrl && (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={post.featuredImageUrl}
+                        alt=""
+                        className="mt-1.5 h-10 w-16 rounded object-cover border"
+                      />
+                    )}
                   </td>
                   <td className="p-4">
                     <span className="px-2 py-0.5 rounded bg-primary/10 text-primary font-bold text-[10px]">
-                      {post.category.replace("_", " ")}
+                      {post.category.replace(/_/g, " ")}
                     </span>
                   </td>
                   <td className="p-4">{post.author.name}</td>
                   <td className="p-4">
                     <span
                       className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                        post.status === "PUBLISHED"
-                          ? "bg-emerald-100 text-emerald-800"
-                          : "bg-amber-100 text-amber-800"
+                        STATUS_STYLES[post.status] || "bg-gray-100 text-gray-700"
                       }`}
                     >
                       {post.status}
@@ -118,6 +150,12 @@ export default async function AdminBlogsPage() {
                         <Edit className="w-3.5 h-3.5" />
                         <span>Edit</span>
                       </Link>
+                      {/* Client-side delete/unpublish actions */}
+                      <AdminBlogActions
+                        postId={post.id}
+                        status={post.status}
+                        isSuperAdmin={access.isSuperAdmin}
+                      />
                     </div>
                   </td>
                 </tr>
@@ -129,4 +167,3 @@ export default async function AdminBlogsPage() {
     </div>
   );
 }
-

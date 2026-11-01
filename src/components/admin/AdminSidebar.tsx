@@ -31,15 +31,16 @@ export type StaffPermission =
   | "all";
 
 const navItems = [
-  { label: "Dashboard",          href: "/admin",          icon: LayoutDashboard, permission: "dashboard" as const },
-  { label: "Colleges Directory", href: "/admin/colleges", icon: Building2,        permission: "colleges"  as const },
-  { label: "Entrance Exams",     href: "/admin/exams",    icon: BookOpen,         permission: "exams"     as const },
-  { label: "Editorial Blog CMS", href: "/admin/blogs",    icon: FileText,         permission: "blogs"     as const },
-  { label: "Review Moderation",  href: "/admin/reviews",  icon: MessageSquare,    permission: "reviews"   as const },
-  { label: "B2B Student Leads",  href: "/admin/leads",    icon: Contact2,         permission: "leads"     as const },
-  { label: "SEO & GEO Engine",   href: "/admin/seo-geo",  icon: Globe2,           permission: "seo-geo"   as const },
-  { label: "User & Role Access", href: "/admin/users",    icon: Users,            permission: "users"     as const },
-  { label: "Staff Management",   href: "/admin/staff",    icon: UserCog,          permission: "all"       as const },
+  { label: "Dashboard",          href: "/admin",              icon: LayoutDashboard, permission: "dashboard"  as const },
+  { label: "Colleges Directory", href: "/admin/colleges",     icon: Building2,        permission: "colleges"   as const },
+  { label: "Entrance Exams",     href: "/admin/exams",        icon: BookOpen,         permission: "exams"      as const },
+  { label: "Editorial Blog CMS", href: "/admin/blogs",        icon: FileText,         permission: "blogs"      as const },
+  { label: "My Blog Desk",       href: "/admin/staff-blogs",  icon: FileText,         permission: "blogs-staff" as any },
+  { label: "Review Moderation",  href: "/admin/reviews",      icon: MessageSquare,    permission: "reviews"    as const },
+  { label: "B2B Student Leads",  href: "/admin/leads",        icon: Contact2,         permission: "leads"      as const },
+  { label: "SEO & GEO Engine",   href: "/admin/seo-geo",      icon: Globe2,           permission: "seo-geo"    as const },
+  { label: "User & Role Access", href: "/admin/users",        icon: Users,            permission: "users"      as const },
+  { label: "Staff Management",   href: "/admin/staff",        icon: UserCog,          permission: "all"        as const },
 ];
 
 interface AdminSidebarProps {
@@ -60,10 +61,20 @@ export function AdminSidebar({
   const pathname = usePathname();
 
   const visibleItems = navItems.filter((item) => {
-    if (role === "SUPER_ADMIN") return true;
-    if (item.permission === "all") return false;
+    if (role === "SUPER_ADMIN") {
+      // Super admin sees full Editorial Blog CMS, not "My Blog Desk"
+      return item.permission !== "blogs-staff";
+    }
+    if (item.permission === "all" || item.permission === "blogs-staff") return false;
+    // STAFF: show "My Blog Desk" if they have blogs permission (as a separate entry)
     return permissions.includes(item.permission);
   });
+
+  // If STAFF has blogs permission, inject "My Blog Desk" instead of the full CMS link
+  const blogsDeskItem =
+    role !== "SUPER_ADMIN" && permissions.includes("blogs")
+      ? { label: "My Blog Desk", href: "/admin/staff-blogs", icon: FileText, permission: "blogs-staff" as any }
+      : null;
 
   return (
     <aside
@@ -113,7 +124,10 @@ export function AdminSidebar({
 
         {/* Navigation */}
         <nav className="px-3 space-y-0.5">
-          {visibleItems.map((item) => {
+          {(blogsDeskItem
+            ? [...visibleItems.filter((i) => i.permission !== "blogs"), blogsDeskItem]
+            : visibleItems
+          ).map((item) => {
             const isActive =
               item.href === "/admin"
                 ? pathname === "/admin"

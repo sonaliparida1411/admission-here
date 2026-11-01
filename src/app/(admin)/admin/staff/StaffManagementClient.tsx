@@ -19,7 +19,8 @@ import {
   Lock,
   Eye,
   EyeOff,
-  UserCheck
+  UserCheck,
+  PencilLine,
 } from "lucide-react";
 
 interface StaffItem {
@@ -102,6 +103,55 @@ export function StaffManagementClient({
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [deleteLoading, setDeleteLoading] = useState<string | null>(null);
+
+  // Edit Permissions modal state
+  const [editingStaff, setEditingStaff] = useState<StaffItem | null>(null);
+  const [editPermissions, setEditPermissions] = useState<string[]>([]);
+  const [editSubmitting, setEditSubmitting] = useState(false);
+  const [editError, setEditError] = useState<string | null>(null);
+
+  const openEditModal = (staff: StaffItem) => {
+    setEditingStaff(staff);
+    setEditPermissions([...staff.permissions]);
+    setEditError(null);
+  };
+
+  const toggleEditPermission = (permId: string) => {
+    setEditPermissions((prev) =>
+      prev.includes(permId) ? prev.filter((p) => p !== permId) : [...prev, permId]
+    );
+  };
+
+  const handleUpdatePermissions = async () => {
+    if (!editingStaff) return;
+    if (editPermissions.length === 0) {
+      setEditError("Select at least one permission.");
+      return;
+    }
+    setEditSubmitting(true);
+    setEditError(null);
+    try {
+      const res = await fetch("/api/v1/admin/staff", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: editingStaff.id, permissions: editPermissions }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) throw new Error(data.error || "Failed to update.");
+
+      setStaffList((prev) =>
+        prev.map((s) =>
+          s.id === editingStaff.id ? { ...s, permissions: editPermissions } : s
+        )
+      );
+      setSuccessMsg(`Permissions updated for "${editingStaff.name}".`);
+      setEditingStaff(null);
+    } catch (err: any) {
+      setEditError(err.message || "Failed to update permissions.");
+    } finally {
+      setEditSubmitting(false);
+    }
+  };
 
   const togglePermission = (permId: string) => {
     setSelectedPermissions((prev) =>
@@ -416,14 +466,23 @@ export function StaffManagementClient({
 
                     {/* Actions */}
                     <td className="py-3 px-4 text-right">
-                      <button
-                        onClick={() => handleDeleteStaff(staff.id, staff.name)}
-                        disabled={deleteLoading === staff.id}
-                        className="p-1.5 rounded-md hover:bg-red-500/10 text-red-600 transition-colors cursor-pointer"
-                        title="Delete Staff Account"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                      <div className="flex items-center justify-end gap-1.5">
+                        <button
+                          onClick={() => openEditModal(staff)}
+                          className="p-1.5 rounded-md hover:bg-blue-500/10 text-blue-600 transition-colors cursor-pointer"
+                          title="Edit Permissions"
+                        >
+                          <PencilLine className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteStaff(staff.id, staff.name)}
+                          disabled={deleteLoading === staff.id}
+                          className="p-1.5 rounded-md hover:bg-red-500/10 text-red-600 transition-colors cursor-pointer"
+                          title="Delete Staff Account"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -647,6 +706,121 @@ export function StaffManagementClient({
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* EDIT PERMISSIONS MODAL */}
+      {editingStaff && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-xs">
+          <div className="w-full max-w-lg bg-card border rounded-2xl p-5 sm:p-7 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-start justify-between pb-3 border-b">
+              <div>
+                <h2 className="text-lg font-bold text-foreground">
+                  Edit Permissions — {editingStaff.name}
+                </h2>
+                <p className="text-xs text-muted-foreground mt-0.5">{editingStaff.email}</p>
+              </div>
+              <button
+                onClick={() => setEditingStaff(null)}
+                className="text-muted-foreground hover:text-foreground p-1"
+              >
+                ✕
+              </button>
+            </div>
+
+            {editError && (
+              <div className="p-3 text-xs bg-red-500/10 border border-red-500/20 text-red-600 rounded-lg flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 shrink-0" />
+                <span>{editError}</span>
+              </div>
+            )}
+
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-bold text-foreground">Feature Access Permissions</label>
+                <div className="flex items-center gap-2 text-[11px]">
+                  <button
+                    type="button"
+                    onClick={() => setEditPermissions(AVAILABLE_PERMISSIONS.map((p) => p.id))}
+                    className="text-primary hover:underline font-semibold"
+                  >
+                    Select All
+                  </button>
+                  <span className="text-muted-foreground">•</span>
+                  <button
+                    type="button"
+                    onClick={() => setEditPermissions([])}
+                    className="text-muted-foreground hover:underline"
+                  >
+                    Clear
+                  </button>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                {AVAILABLE_PERMISSIONS.map((perm) => {
+                  const isSelected = editPermissions.includes(perm.id);
+                  const Icon = perm.icon;
+                  return (
+                    <div
+                      key={perm.id}
+                      onClick={() => toggleEditPermission(perm.id)}
+                      className={`p-3 rounded-xl border text-left cursor-pointer transition-all flex items-start gap-3 ${
+                        isSelected
+                          ? "border-primary bg-primary/5 shadow-2xs"
+                          : "hover:bg-muted/30 border-border"
+                      }`}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={isSelected}
+                        onChange={() => {}}
+                        className="mt-0.5 rounded text-primary shrink-0"
+                      />
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-1.5">
+                          <Icon className="w-3.5 h-3.5" style={{ color: perm.badgeColor }} />
+                          <strong className="text-xs text-foreground">{perm.label}</strong>
+                        </div>
+                        <p className="text-[10px] text-muted-foreground mt-0.5 leading-snug">
+                          {perm.desc}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-3 pt-3 border-t">
+              <button
+                type="button"
+                onClick={() => setEditingStaff(null)}
+                className="px-4 py-2 rounded-lg border text-xs font-semibold hover:bg-muted text-foreground"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleUpdatePermissions}
+                disabled={editSubmitting}
+                className="px-5 py-2 rounded-lg text-xs font-bold text-white shadow-xs flex items-center gap-1.5"
+                style={{ background: "#1a3068" }}
+              >
+                {editSubmitting ? (
+                  <>
+                    <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    <span>Saving...</span>
+                  </>
+                ) : (
+                  <>
+                    <ShieldCheck className="w-3.5 h-3.5" />
+                    <span>Update Permissions</span>
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         </div>
       )}

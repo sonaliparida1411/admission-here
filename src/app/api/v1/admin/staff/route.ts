@@ -116,6 +116,46 @@ export async function POST(req: Request) {
   }
 }
 
+export async function PATCH(req: Request) {
+  try {
+    const body = await req.json();
+    const { id, permissions } = body;
+
+    if (!id) {
+      return NextResponse.json(
+        { success: false, error: "Staff user ID is required." },
+        { status: 400 }
+      );
+    }
+
+    if (!Array.isArray(permissions) || permissions.length === 0) {
+      return NextResponse.json(
+        { success: false, error: "Please select at least one permission." },
+        { status: 400 }
+      );
+    }
+
+    // Upsert the StaffPermission record
+    const updated = await db.staffPermission.upsert({
+      where: { userId: id },
+      update: { permissions },
+      create: { userId: id, permissions },
+    });
+
+    return NextResponse.json({
+      success: true,
+      message: "Staff permissions updated successfully.",
+      permissions: updated.permissions,
+    });
+  } catch (error: any) {
+    console.error("Error updating staff permissions:", error);
+    return NextResponse.json(
+      { success: false, error: error.message || "Failed to update permissions." },
+      { status: 500 }
+    );
+  }
+}
+
 export async function DELETE(req: Request) {
   try {
     const { searchParams } = new URL(req.url);

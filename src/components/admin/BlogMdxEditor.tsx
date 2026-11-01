@@ -21,6 +21,7 @@ interface BlogMdxEditorProps {
     title: string;
     metaTitle?: string;
     metaDescription?: string;
+    featuredImageUrl?: string;
     tldrSummary?: string[];
     contentMdx: string;
     category: string;
@@ -28,14 +29,18 @@ interface BlogMdxEditorProps {
     isLiveBlog?: boolean;
     relatedCollegeSlug?: string;
   };
+  /** When false, the Publish button is hidden (staff without publish permission). */
+  canPublish?: boolean;
   onSave: (data: any, isPublish: boolean) => Promise<void>;
 }
 
-export function BlogMdxEditor({ initialData, onSave }: BlogMdxEditorProps) {
+export function BlogMdxEditor({ initialData, canPublish = true, onSave }: BlogMdxEditorProps) {
   const [title, setTitle] = useState(initialData?.title || "");
   const [metaTitle, setMetaTitle] = useState(initialData?.metaTitle || "");
   const [metaDescription, setMetaDescription] = useState(initialData?.metaDescription || "");
+  const [featuredImageUrl, setFeaturedImageUrl] = useState(initialData?.featuredImageUrl || "");
   const [category, setCategory] = useState(initialData?.category || "CUTOFF_ANALYSIS");
+  const [tagsText, setTagsText] = useState((initialData?.tags || []).join(", "));
   const [tldrText, setTldrText] = useState(
     (initialData?.tldrSummary || [
       "Top NIT CSE opening ranks range between 1,000 to 7,000 AIR.",
@@ -64,13 +69,20 @@ export function BlogMdxEditor({ initialData, onSave }: BlogMdxEditorProps) {
         .map((s) => s.trim())
         .filter(Boolean);
 
+      const tagsArray = tagsText
+        .split(",")
+        .map((t) => t.trim())
+        .filter(Boolean);
+
       await onSave(
         {
           id: initialData?.id,
           title,
           metaTitle,
           metaDescription,
+          featuredImageUrl: featuredImageUrl.trim() || undefined,
           category,
+          tags: tagsArray,
           tldrSummary: tldrArray,
           contentMdx,
           isLiveBlog,
@@ -137,6 +149,43 @@ export function BlogMdxEditor({ initialData, onSave }: BlogMdxEditorProps) {
                 </span>
               </label>
             </div>
+          </div>
+
+          {/* Featured Image URL */}
+          <div>
+            <label className="block text-xs font-semibold text-muted-foreground mb-1">
+              Featured Image URL <span className="font-normal">(optional)</span>
+            </label>
+            <input
+              type="url"
+              value={featuredImageUrl}
+              onChange={(e) => setFeaturedImageUrl(e.target.value)}
+              placeholder="https://example.com/image.jpg"
+              className="w-full text-xs border rounded-lg px-3 py-2 bg-background outline-hidden focus:border-primary"
+            />
+            {featuredImageUrl && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={featuredImageUrl}
+                alt="Featured preview"
+                className="mt-2 h-24 w-auto rounded-lg object-cover border"
+                onError={(e) => ((e.target as HTMLImageElement).style.display = "none")}
+              />
+            )}
+          </div>
+
+          {/* Tags */}
+          <div>
+            <label className="block text-xs font-semibold text-muted-foreground mb-1">
+              Tags <span className="font-normal">(comma-separated)</span>
+            </label>
+            <input
+              type="text"
+              value={tagsText}
+              onChange={(e) => setTagsText(e.target.value)}
+              placeholder="jee-main, cutoff-2026, nit-rourkela"
+              className="w-full text-xs border rounded-lg px-3 py-2 bg-background outline-hidden focus:border-primary"
+            />
           </div>
         </div>
 
@@ -249,15 +298,21 @@ export function BlogMdxEditor({ initialData, onSave }: BlogMdxEditorProps) {
             <Save className="w-3.5 h-3.5" />
             <span>Save as Draft</span>
           </button>
-          <button
-            type="button"
-            disabled={saving}
-            onClick={() => handleFormSubmit(true)}
-            className="px-5 py-2 rounded-lg bg-primary text-primary-foreground text-xs font-bold flex items-center gap-1.5 hover:bg-primary/90 transition-colors shadow-xs cursor-pointer"
-          >
-            <Send className="w-3.5 h-3.5" />
-            <span>Publish & Index with Vector AI</span>
-          </button>
+          {canPublish ? (
+            <button
+              type="button"
+              disabled={saving}
+              onClick={() => handleFormSubmit(true)}
+              className="px-5 py-2 rounded-lg bg-primary text-primary-foreground text-xs font-bold flex items-center gap-1.5 hover:bg-primary/90 transition-colors shadow-xs cursor-pointer"
+            >
+              <Send className="w-3.5 h-3.5" />
+              <span>Publish & Index with Vector AI</span>
+            </button>
+          ) : (
+            <span className="text-[11px] text-amber-600 font-semibold px-3 py-2 rounded-lg border bg-amber-50">
+              Publishing requires admin approval
+            </span>
+          )}
         </div>
       </div>
 

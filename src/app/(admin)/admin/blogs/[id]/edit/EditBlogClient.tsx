@@ -28,13 +28,17 @@ export function EditBlogClient({ post }: { post: any }) {
         title: post.title,
         metaTitle: post.metaTitle || undefined,
         metaDescription: post.metaDescription || undefined,
+        featuredImageUrl: post.featuredImageUrl || undefined,
         tldrSummary: post.tldrSummary || [],
         contentMdx: post.contentMdx,
         category: post.category,
+        tags: post.tags || [],
         isLiveBlog: post.isLiveBlog,
       }}
+      canPublish={true}
       onSave={handleSave}
     />
   );
 }
+
 
