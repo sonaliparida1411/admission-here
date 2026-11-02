@@ -28,8 +28,10 @@ interface StaffItem {
   name: string;
   email: string;
   phone?: string | null;
+  isActive?: boolean;
   createdAt: string;
   permissions: string[];
+  assignedCollegeIds?: string[];
 }
 
 const AVAILABLE_PERMISSIONS = [
@@ -252,6 +254,27 @@ export function StaffManagementClient({
     }
   };
 
+  const handleToggleActive = async (id: string, currentStatus: boolean, staffName: string) => {
+    try {
+      const res = await fetch("/api/v1/admin/staff", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, isActive: !currentStatus }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setStaffList((prev) =>
+          prev.map((s) => (s.id === id ? { ...s, isActive: !currentStatus } : s))
+        );
+        setSuccessMsg(
+          `Staff account "${staffName}" ${!currentStatus ? "activated" : "deactivated"} successfully.`
+        );
+      }
+    } catch {
+      alert("Failed to toggle staff status.");
+    }
+  };
+
   const filteredStaff = staffList.filter((staff) => {
     const q = searchQuery.toLowerCase();
     return (
@@ -397,6 +420,7 @@ export function StaffManagementClient({
                   <th className="py-3 px-4 font-semibold">Staff Member</th>
                   <th className="py-3 px-4 font-semibold">User ID / Login Email</th>
                   <th className="py-3 px-4 font-semibold">Assigned Permissions / Features</th>
+                  <th className="py-3 px-4 font-semibold">Account Status</th>
                   <th className="py-3 px-4 font-semibold">Created Date</th>
                   <th className="py-3 px-4 font-semibold text-right">Actions</th>
                 </tr>
@@ -453,6 +477,22 @@ export function StaffManagementClient({
                           })}
                         </div>
                       )}
+                    </td>
+
+                    {/* Account Status Toggle */}
+                    <td className="py-3 px-4">
+                      <button
+                        type="button"
+                        onClick={() => handleToggleActive(staff.id, staff.isActive !== false, staff.name)}
+                        className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full border cursor-pointer transition-colors ${
+                          staff.isActive !== false
+                            ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/25"
+                            : "bg-red-500/15 text-red-700 dark:text-red-400 border-red-500/20 hover:bg-red-500/25"
+                        }`}
+                        title="Click to toggle account activation"
+                      >
+                        {staff.isActive !== false ? "● Active" : "○ Deactivated"}
+                      </button>
                     </td>
 
                     {/* Created Date */}

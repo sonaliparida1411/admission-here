@@ -19,7 +19,7 @@ export interface LeadItem {
   id: string;
   studentName: string;
   phone: string;
-  email: string;
+  email?: string | null;
   city?: string | null;
   state?: string | null;
   targetStream: string;
@@ -156,7 +156,7 @@ export function LeadCrmKanban({ initialLeads }: LeadCrmKanbanProps) {
               </div>
               <div>
                 <span className="text-muted-foreground block">Email</span>
-                <span className="font-semibold text-foreground">{selectedLead.email}</span>
+                <span className="font-semibold text-foreground">{selectedLead.email || "Not provided (Quick 3-Field Apply)"}</span>
               </div>
               <div>
                 <span className="text-muted-foreground block">Target College</span>

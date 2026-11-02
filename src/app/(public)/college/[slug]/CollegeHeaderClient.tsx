@@ -15,6 +15,7 @@ import {
   Share2
 } from "lucide-react";
 import { LeadCaptureModal } from "@/components/public/LeadCaptureModal";
+import { BrochureDownloadModal } from "@/components/public/BrochureDownloadModal";
 import { LeadCtaType } from "@prisma/client";
 
 interface CollegeHeaderClientProps {
@@ -39,8 +40,8 @@ interface CollegeHeaderClientProps {
 
 export function CollegeHeaderClient({ college }: CollegeHeaderClientProps) {
   const pathname = usePathname();
-  const [modalOpen, setModalOpen] = useState(false);
-  const [ctaType, setCtaType] = useState<LeadCtaType>(LeadCtaType.APPLY_NOW);
+  const [applyModalOpen, setApplyModalOpen] = useState(false);
+  const [brochureModalOpen, setBrochureModalOpen] = useState(false);
 
   const tabs = [
     { label: "Overview", path: `/college/${college.slug}` },
@@ -53,11 +54,6 @@ export function CollegeHeaderClient({ college }: CollegeHeaderClientProps) {
     { label: "Reviews", path: `/college/${college.slug}/reviews` },
     { label: "Q&A", path: `/college/${college.slug}/qna` },
   ];
-
-  const handleOpenCta = (type: LeadCtaType) => {
-    setCtaType(type);
-    setModalOpen(true);
-  };
 
   return (
     <>
@@ -98,55 +94,58 @@ export function CollegeHeaderClient({ college }: CollegeHeaderClientProps) {
               <div className="space-y-1 pt-1 sm:pt-0 min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
                   {college.nirfRank && (
-                    <span className="inline-flex items-center gap-1 text-[11px] sm:text-xs font-bold px-2 sm:px-2.5 py-0.5 rounded-full bg-amber-500/15 text-amber-700 dark:text-amber-400">
-                      <Award className="w-3 h-3 sm:w-3.5 sm:h-3.5" /> NIRF #{college.nirfRank}
+                    <span className="text-[10px] sm:text-xs font-black px-2 sm:px-2.5 py-0.5 rounded-full bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/20">
+                      NIRF #{college.nirfRank}
                     </span>
                   )}
                   {college.naacGrade && (
-                    <span className="inline-flex items-center gap-1 text-[11px] sm:text-xs font-semibold px-2 sm:px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-700 dark:text-emerald-400">
-                      <ShieldCheck className="w-3 h-3 sm:w-3.5 sm:h-3.5" /> NAAC {college.naacGrade}
+                    <span className="text-[10px] sm:text-xs font-bold px-2 sm:px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20">
+                      NAAC {college.naacGrade}
                     </span>
                   )}
-                  <span className="text-[11px] sm:text-xs text-muted-foreground font-medium">
-                    {college.ownershipType.replace("_", " ")}
+                  <span className="text-[10px] sm:text-xs font-bold px-2 sm:px-2.5 py-0.5 rounded-full bg-muted text-muted-foreground border">
+                    {college.ownershipType.replace(/_/g, " ")}
                   </span>
                 </div>
 
-                <h1 className="text-lg sm:text-2xl md:text-3xl font-extrabold text-foreground tracking-tight leading-tight line-clamp-2 sm:line-clamp-none">
+                <h1 className="text-xl sm:text-3xl font-extrabold text-foreground tracking-tight leading-tight">
                   {college.name}
                 </h1>
 
-                <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground pt-0.5">
+                <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-xs text-muted-foreground pt-0.5">
                   <span className="flex items-center gap-1">
-                    <MapPin className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                    <MapPin className="w-3.5 h-3.5 text-muted-foreground" />
                     <span>{college.city}, {college.state}</span>
                   </span>
                   {college.estYear && (
-                    <span className="hidden xs:flex items-center gap-1">
-                      <Calendar className="w-3.5 h-3.5 shrink-0" /> Estd. {college.estYear}
+                    <span className="flex items-center gap-1">
+                      <Calendar className="w-3.5 h-3.5 text-muted-foreground" />
+                      <span>Estd. {college.estYear}</span>
                     </span>
                   )}
-                  <span className="flex items-center gap-1 text-amber-600 font-bold">
-                    <Star className="w-3.5 h-3.5 fill-amber-500 text-amber-500 shrink-0" />
-                    {college.ratingOverall.toFixed(1)} <span className="text-[11px] text-muted-foreground font-normal">({college.reviewCount})</span>
+                  <span className="flex items-center gap-1 font-bold text-amber-600">
+                    <Star className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
+                    <span>{college.ratingOverall.toFixed(1)} ({college.reviewCount} Reviews)</span>
                   </span>
                 </div>
               </div>
             </div>
 
-            {/* Top Action CTAs (Desktop / Tablet) */}
-            <div className="hidden sm:flex items-center gap-2.5 w-full sm:w-auto shrink-0">
+            {/* Desktop Action Buttons */}
+            <div className="hidden sm:flex items-center gap-2.5 shrink-0 self-end">
               <button
-                onClick={() => handleOpenCta(LeadCtaType.DOWNLOAD_BROCHURE)}
-                className="flex-1 sm:flex-none px-4 py-2.5 rounded-xl border bg-background hover:bg-accent font-semibold text-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer shadow-2xs"
+                type="button"
+                onClick={() => setBrochureModalOpen(true)}
+                className="px-4 py-2.5 rounded-xl border font-bold text-xs flex items-center gap-1.5 hover:bg-muted text-foreground transition-colors cursor-pointer shadow-xs"
               >
-                <Download className="w-4 h-4 text-blue-600" />
+                <Download className="w-3.5 h-3.5 text-blue-600" />
                 <span>Download Brochure</span>
               </button>
 
               <button
-                onClick={() => handleOpenCta(LeadCtaType.APPLY_NOW)}
-                className="flex-1 sm:flex-none px-6 py-2.5 rounded-xl font-bold text-xs text-white flex items-center justify-center gap-1.5 shadow-md cursor-pointer transition-all hover:opacity-90 active:scale-95"
+                type="button"
+                onClick={() => setApplyModalOpen(true)}
+                className="px-5 py-2.5 rounded-xl font-bold text-xs text-white flex items-center gap-1.5 shadow-md hover:opacity-95 active:scale-95 transition-all cursor-pointer"
                 style={{ background: "#c41e1e" }}
               >
                 <Send className="w-3.5 h-3.5" />
@@ -181,14 +180,16 @@ export function CollegeHeaderClient({ college }: CollegeHeaderClientProps) {
       {/* Sticky Mobile Bottom Action Bar (Mobile Only) */}
       <div className="sm:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t px-4 py-2.5 flex items-center gap-2.5 mobile-bottom-bar shadow-xl">
         <button
-          onClick={() => handleOpenCta(LeadCtaType.DOWNLOAD_BROCHURE)}
+          type="button"
+          onClick={() => setBrochureModalOpen(true)}
           className="flex-1 py-2.5 px-3 rounded-xl border bg-background font-bold text-xs flex items-center justify-center gap-1.5 shadow-2xs text-foreground active:scale-95 transition-all cursor-pointer"
         >
           <Download className="w-4 h-4 text-blue-600" />
           <span>Brochure</span>
         </button>
         <button
-          onClick={() => handleOpenCta(LeadCtaType.APPLY_NOW)}
+          type="button"
+          onClick={() => setApplyModalOpen(true)}
           className="flex-1 py-2.5 px-3 rounded-xl font-bold text-xs text-white flex items-center justify-center gap-1.5 shadow-md active:scale-95 transition-all cursor-pointer"
           style={{ background: "#c41e1e" }}
         >
@@ -197,12 +198,22 @@ export function CollegeHeaderClient({ college }: CollegeHeaderClientProps) {
         </button>
       </div>
 
+      {/* 3-Field Direct Apply Form */}
       <LeadCaptureModal
-        open={modalOpen}
-        onClose={() => setModalOpen(false)}
+        open={applyModalOpen}
+        onClose={() => setApplyModalOpen(false)}
         collegeId={college.id}
         collegeName={college.name}
-        ctaType={ctaType}
+        ctaType={LeadCtaType.APPLY_NOW}
+        brochureUrl={college.brochurePdfUrl || undefined}
+      />
+
+      {/* 7-Field Dedicated Brochure Download Form */}
+      <BrochureDownloadModal
+        open={brochureModalOpen}
+        onClose={() => setBrochureModalOpen(false)}
+        collegeId={college.id}
+        collegeName={college.name}
         brochureUrl={college.brochurePdfUrl || undefined}
       />
     </>

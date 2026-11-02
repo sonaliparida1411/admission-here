@@ -32,8 +32,12 @@ function LoginForm() {
       if (res?.error) {
         setError("Invalid email address or password.");
       } else {
-        router.push(callbackUrl);
-        router.refresh();
+        // Direct students to public portal/colleges instead of admin
+        const target =
+          email.toLowerCase().includes("student") && callbackUrl === "/admin"
+            ? "/colleges"
+            : callbackUrl;
+        router.push(target);
       }
     } catch (err) {
       setError("An unexpected error occurred during login.");

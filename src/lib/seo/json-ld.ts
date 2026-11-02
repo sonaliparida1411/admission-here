@@ -5,6 +5,11 @@ export interface CollegeJsonLdParams {
   slug: string;
   city: string;
   state: string;
+  pincode?: string | null;
+  fullAddress?: string | null;
+  websiteUrl?: string | null;
+  contactPhone?: string | null;
+  contactEmail?: string | null;
   logoUrl?: string | null;
   coverImageUrl?: string | null;
   overviewText: string;
@@ -19,13 +24,18 @@ export function generateCollegeJsonLd(params: CollegeJsonLdParams) {
     "@type": "CollegeOrUniversity",
     name: params.name,
     url: `${BASE_URL}/college/${params.slug}`,
+    sameAs: params.websiteUrl || undefined,
+    telephone: params.contactPhone || undefined,
+    email: params.contactEmail || undefined,
     logo: params.logoUrl || `${BASE_URL}/images/default-college-logo.png`,
     image: params.coverImageUrl || `${BASE_URL}/images/default-campus.jpg`,
     description: params.overviewText.replace(/<[^>]+>/g, "").slice(0, 300),
     address: {
       "@type": "PostalAddress",
+      streetAddress: params.fullAddress || undefined,
       addressLocality: params.city,
       addressRegion: params.state,
+      postalCode: params.pincode || undefined,
       addressCountry: "IN",
     },
     ...(params.ratingOverall && params.reviewCount

@@ -71,6 +71,7 @@ model User {
   targetStream     String?
   examScores       Json?        // e.g., { "jee_main_rank": 42500, "category": "GEN", "home_state": "Odisha" }
   managedCollegeId String?      @db.Uuid
+  isActive         Boolean      @default(true)
   createdAt        DateTime     @default(now())
   updatedAt        DateTime     @updatedAt
 
@@ -78,16 +79,67 @@ model User {
   reviews          Review[]
   leads            Lead[]
   staffPermission  StaffPermission?
+  submittedRequests CollegeApprovalRequest[] @relation("StaffSubmittedRequests")
+  reviewedRequests  CollegeApprovalRequest[] @relation("AdminReviewedRequests")
+  activityLogs     StaffActivityLog[]
 }
 
 model StaffPermission {
-  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  userId      String   @unique @db.Uuid
-  permissions String[] // e.g. ["colleges", "exams", "blogs", "reviews", "leads", "seo-geo"]
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id                  String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId              String   @unique @db.Uuid
+  permissions         String[] // e.g. ["colleges", "exams", "blogs", "reviews", "leads", "seo-geo"]
+  assignedCollegeIds  String[] @default([])
+  isActive            Boolean  @default(true)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
 
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+enum ApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  REVISION_REQUESTED
+}
+
+enum ApprovalActionType {
+  CREATE
+  UPDATE
+}
+
+model CollegeApprovalRequest {
+  id             String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  collegeId      String?            @db.Uuid
+  staffId        String             @db.Uuid
+  actionType     ApprovalActionType @default(UPDATE)
+  section        String             // "BASIC", "COURSES", "ADMISSION", "CUTOFFS", "PLACEMENTS", "RANKINGS", "GALLERY", "BROCHURE", "ALL"
+  title          String             // Summary of change
+  proposedData   Json               // Payload with full fields or section diff
+  status         ApprovalStatus     @default(PENDING)
+  adminFeedback  String?            @db.Text
+  reviewedById   String?            @db.Uuid
+  reviewedAt     DateTime?
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+
+  college        College?           @relation(fields: [collegeId], references: [id], onDelete: Cascade)
+  staff          User               @relation("StaffSubmittedRequests", fields: [staffId], references: [id], onDelete: Cascade)
+  reviewedBy     User?              @relation("AdminReviewedRequests", fields: [reviewedById], references: [id], onDelete: SetNull)
+
+  @@index([status, createdAt(sort: Desc)])
+  @@index([staffId, status])
+}
+
+model StaffActivityLog {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  staffId    String   @db.Uuid
+  collegeId  String?  @db.Uuid
+  action     String   // "SUBMITTED_CHANGES", "APPROVED", "REJECTED", "REVISION_REQUESTED", "CREATED_STAFF"
+  details    String   @db.Text
+  createdAt  DateTime @default(now())
+
+  staff      User     @relation(fields: [staffId], references: [id], onDelete: Cascade)
 }
 
 model College {
@@ -115,12 +167,21 @@ model College {
   facilitiesJson  Json?         // Hostels, Labs, Library, Sports, Wi-Fi
   galleryUrls     String[]
   faqsJson        Json?         // Array of { question, answer } for FAQPage JSON-LD
+  qnaJson         Json?         // Custom Community & Official Q&A
+  fullAddress     String?
+  websiteUrl      String?
+  contactPhone    String?
+  contactEmail    String?
+  scholarshipInfo String?       @db.Text
+  hostelInfo      String?       @db.Text
+  metaTitle       String?
+  metaDescription String?
   ratingOverall   Float         @default(0)
   reviewCount     Int           @default(0)
   isFeatured      Boolean       @default(false)
   isPublished     Boolean       @default(true)
   searchTsv       Unsupported("tsvector")?
-  embedding       Unsupported("vector")?
+  embedding       Json?
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
 
@@ -130,6 +191,7 @@ model College {
   reviews         Review[]
   blogPosts       BlogPost[]
   leads           Lead[]
+  approvalRequests CollegeApprovalRequest[]
 
   @@index([state, city, nirfRank])
   @@index([ownershipType, isPublished])
@@ -277,7 +339,7 @@ model BlogPost {
   viewCount        Int          @default(0)
   publishedAt      DateTime?
   searchTsv        Unsupported("tsvector")?
-  embedding        Unsupported("vector")?
+  embedding        Json?
   createdAt        DateTime     @default(now())
   updatedAt        DateTime     @updatedAt
 
@@ -294,9 +356,12 @@ model Lead {
   userId          String?     @db.Uuid
   studentName     String
   phone           String
-  email           String
+  email           String?
   city            String?
   state           String?
+  district        String?
+  parentPhone     String?
+  targetCourse    String?
   targetStream    String
   targetDegree    String?
   examRankInfo    String?
@@ -304,6 +369,7 @@ model Lead {
   sourceBlogId    String?     @db.Uuid
   sourceUrl       String
   ctaType         LeadCtaType
+  isBrochureDownloaded Boolean @default(false)
   utmSource       String?
   utmMedium       String?
   utmCampaign     String?

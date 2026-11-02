@@ -198,6 +198,61 @@ async function main() {
     },
   });
 
+  const mtech = await db.course.create({
+    data: {
+      slug: "m-tech",
+      stream: "Engineering",
+      degree: "M.Tech",
+      fullName: "Master of Technology",
+      durationYrs: 2,
+      level: "PG",
+    },
+  });
+
+  const bba = await db.course.create({
+    data: {
+      slug: "bba",
+      stream: "Management",
+      degree: "BBA",
+      fullName: "Bachelor of Business Administration",
+      durationYrs: 3,
+      level: "UG",
+    },
+  });
+
+  const bca = await db.course.create({
+    data: {
+      slug: "bca",
+      stream: "Computer Applications",
+      degree: "BCA",
+      fullName: "Bachelor of Computer Applications",
+      durationYrs: 3,
+      level: "UG",
+    },
+  });
+
+  const mca = await db.course.create({
+    data: {
+      slug: "mca",
+      stream: "Computer Applications",
+      degree: "MCA",
+      fullName: "Master of Computer Applications",
+      durationYrs: 2,
+      level: "PG",
+    },
+  });
+
+  const bsc = await db.course.create({
+    data: {
+      slug: "b-sc",
+      stream: "Science",
+      degree: "B.Sc",
+      fullName: "Bachelor of Science",
+      durationYrs: 3,
+      level: "UG",
+    },
+  });
+
   console.log("🎓 Seeded Core Degree Courses.");
 
   // 5. Create Colleges with Rich Data
@@ -469,6 +524,38 @@ async function main() {
       acceptedExamSlugs: ["cat"],
       eligibilityCriteria: {
         min_grad_pct: 50,
+      },
+    },
+  });
+
+  const iitbMtech = await db.collegeCourse.create({
+    data: {
+      collegeId: iitBombay.id,
+      courseId: mtech.id,
+      specialization: "Artificial Intelligence & Data Science",
+      totalFeesInr: 450000,
+      firstYearFeesInr: 230000,
+      hostelFeesYearlyInr: 45000,
+      intakeSeats: 60,
+      acceptedExamSlugs: ["gate"],
+      eligibilityCriteria: {
+        min_btech_pct: 65,
+      },
+    },
+  });
+
+  const nitrMca = await db.collegeCourse.create({
+    data: {
+      collegeId: nitRourkela.id,
+      courseId: mca.id,
+      specialization: "Master of Computer Applications",
+      totalFeesInr: 380000,
+      firstYearFeesInr: 195000,
+      hostelFeesYearlyInr: 40000,
+      intakeSeats: 50,
+      acceptedExamSlugs: ["nimcet"],
+      eligibilityCriteria: {
+        min_grad_pct: 60,
       },
     },
   });

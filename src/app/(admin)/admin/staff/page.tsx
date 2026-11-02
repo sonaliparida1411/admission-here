@@ -40,8 +40,10 @@ export default async function StaffManagementPage() {
     name: s.name,
     email: s.email,
     phone: s.phone,
+    isActive: s.isActive,
     createdAt: s.createdAt.toISOString(),
     permissions: s.staffPermission?.permissions || [],
+    assignedCollegeIds: s.staffPermission?.assignedCollegeIds || [],
   }));
 
   return <StaffManagementClient initialStaff={formattedStaff} />;

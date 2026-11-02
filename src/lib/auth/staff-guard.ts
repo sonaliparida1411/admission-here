@@ -1,9 +1,11 @@
 import { auth } from "@/lib/auth/config";
+import { cache } from "react";
 
 export interface AdminAccessResult {
   allowed: boolean;
   isSuperAdmin: boolean;
   role: string;
+  userId: string;
   userName: string;
   userEmail: string;
   permissions: string[];
@@ -11,11 +13,10 @@ export interface AdminAccessResult {
 
 /**
  * Checks if the current session has permission to access an admin feature.
- * If user is SUPER_ADMIN, always returns allowed: true.
- * If user is STAFF, checks if feature is in permissions.
- * If user is not logged in (e.g. development), allows default to SUPER_ADMIN.
+ * Wrapped in React cache() so multiple components in the same render cycle
+ * do not re-execute or re-decode session tokens.
  */
-export async function checkAdminAccess(feature?: string): Promise<AdminAccessResult> {
+export const checkAdminAccess = cache(async function checkAdminAccess(feature?: string): Promise<AdminAccessResult> {
   const session = await auth();
   const user = session?.user as any;
 
@@ -25,6 +26,7 @@ export async function checkAdminAccess(feature?: string): Promise<AdminAccessRes
       allowed: true,
       isSuperAdmin: true,
       role: "SUPER_ADMIN",
+      userId: "00000000-0000-0000-0000-000000000001",
       userName: "Super Administrator",
       userEmail: "superadmin@admissionhere.in",
       permissions: [
@@ -45,12 +47,14 @@ export async function checkAdminAccess(feature?: string): Promise<AdminAccessRes
   const permissions: string[] = user.permissions || [];
   const userName = user.name || "User";
   const userEmail = user.email || "";
+  const userId = user.id || "00000000-0000-0000-0000-000000000001";
 
   if (role === "SUPER_ADMIN") {
     return {
       allowed: true,
       isSuperAdmin: true,
       role: "SUPER_ADMIN",
+      userId,
       userName,
       userEmail,
       permissions: [
@@ -74,6 +78,7 @@ export async function checkAdminAccess(feature?: string): Promise<AdminAccessRes
         allowed: false,
         isSuperAdmin: false,
         role: "STAFF",
+        userId,
         userName,
         userEmail,
         permissions,
@@ -86,6 +91,7 @@ export async function checkAdminAccess(feature?: string): Promise<AdminAccessRes
         allowed: true,
         isSuperAdmin: false,
         role: "STAFF",
+        userId,
         userName,
         userEmail,
         permissions,
@@ -98,6 +104,7 @@ export async function checkAdminAccess(feature?: string): Promise<AdminAccessRes
       allowed,
       isSuperAdmin: false,
       role: "STAFF",
+      userId,
       userName,
       userEmail,
       permissions,
@@ -108,9 +115,10 @@ export async function checkAdminAccess(feature?: string): Promise<AdminAccessRes
     allowed: false,
     isSuperAdmin: false,
     role,
+    userId,
     userName,
     userEmail,
     permissions: [],
   };
-}
+});
 

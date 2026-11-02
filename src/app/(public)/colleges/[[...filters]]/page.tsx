@@ -7,6 +7,7 @@ import { JsonLdScript } from "@/components/seo/JsonLdScript";
 import { generateBreadcrumbJsonLd } from "@/lib/seo/json-ld";
 import { Building2 } from "lucide-react";
 import { Suspense } from "react";
+import { redirect } from "next/navigation";
 
 export const revalidate = 3600;
 
@@ -14,6 +15,8 @@ interface CollegesPageProps {
   params: Promise<{ filters?: string[] }>;
   searchParams: Promise<{
     stream?: string;
+    course?: string;
+    level?: string;
     state?: string;
     ownership?: string;
     maxFees?: string;
@@ -52,9 +55,22 @@ export default async function CollegesDirectoryPage({
   const { filters = [] } = await params;
   const sParams = await searchParams;
 
+  // If a single slug parameter is passed, check if it matches a college profile directly (e.g. /colleges/nit-rourkela)
+  if (filters.length === 1) {
+    const slugQuery = filters[0].toLowerCase();
+    const collegeMatch = await db.college.findUnique({
+      where: { slug: slugQuery },
+      select: { slug: true },
+    });
+    if (collegeMatch) {
+      redirect(`/college/${collegeMatch.slug}`);
+    }
+  }
+
   // Determine stream and state from URL path segments or query parameters
-  let targetStream = sParams.stream || "";
+  let targetStream = sParams.stream || sParams.course || "";
   let targetState = sParams.state || "";
+  let targetLevel = sParams.level || "";
 
   if (filters.length === 1) {
     targetStream = filters[0].replace(/-/g, " ");
@@ -76,13 +92,21 @@ export default async function CollegesDirectoryPage({
     whereClause.ownershipType = sParams.ownership as any;
   }
 
-  if (targetStream) {
+  if (targetStream || targetLevel) {
     whereClause.courses = {
       some: {
         course: {
-          OR: [
-            { stream: { contains: targetStream, mode: "insensitive" } },
-            { degree: { contains: targetStream, mode: "insensitive" } },
+          AND: [
+            targetLevel ? { level: { equals: targetLevel, mode: "insensitive" } } : {},
+            targetStream
+              ? {
+                  OR: [
+                    { stream: { contains: targetStream, mode: "insensitive" } },
+                    { degree: { contains: targetStream, mode: "insensitive" } },
+                    { slug: { contains: targetStream, mode: "insensitive" } },
+                  ],
+                }
+              : {},
           ],
         },
       },

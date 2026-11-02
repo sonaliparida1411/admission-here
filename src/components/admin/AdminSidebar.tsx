@@ -15,6 +15,8 @@ import {
   Contact2,
   UserCog,
   ShieldCheck,
+  CheckSquare,
+  MailCheck,
   X
 } from "lucide-react";
 
@@ -28,16 +30,19 @@ export type StaffPermission =
   | "seo-geo"
   | "users"
   | "staff"
+  | "approvals"
   | "all";
 
 const navItems = [
   { label: "Dashboard",          href: "/admin",              icon: LayoutDashboard, permission: "dashboard"  as const },
   { label: "Colleges Directory", href: "/admin/colleges",     icon: Building2,        permission: "colleges"   as const },
+  { label: "Staff Approvals",    href: "/admin/approvals",    icon: CheckSquare,      permission: "colleges"   as const },
+  { label: "Enquiries Desk",     href: "/admin/enquiries",    icon: MailCheck,        permission: "leads"      as const },
+  { label: "B2B Student Leads",  href: "/admin/leads",        icon: Contact2,         permission: "leads"      as const },
   { label: "Entrance Exams",     href: "/admin/exams",        icon: BookOpen,         permission: "exams"      as const },
   { label: "Editorial Blog CMS", href: "/admin/blogs",        icon: FileText,         permission: "blogs"      as const },
   { label: "My Blog Desk",       href: "/admin/staff-blogs",  icon: FileText,         permission: "blogs-staff" as any },
   { label: "Review Moderation",  href: "/admin/reviews",      icon: MessageSquare,    permission: "reviews"    as const },
-  { label: "B2B Student Leads",  href: "/admin/leads",        icon: Contact2,         permission: "leads"      as const },
   { label: "SEO & GEO Engine",   href: "/admin/seo-geo",      icon: Globe2,           permission: "seo-geo"    as const },
   { label: "User & Role Access", href: "/admin/users",        icon: Users,            permission: "users"      as const },
   { label: "Staff Management",   href: "/admin/staff",        icon: UserCog,          permission: "all"        as const },
@@ -138,6 +143,7 @@ export function AdminSidebar({
               <Link
                 key={item.href}
                 href={item.href}
+                prefetch={true}
                 onClick={onClose}
                 className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold transition-all ${
                   isActive

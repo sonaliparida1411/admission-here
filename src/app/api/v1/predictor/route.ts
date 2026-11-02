@@ -7,7 +7,8 @@ const PredictorSchema = z.object({
   rank: z.coerce.number().min(1, "Rank must be at least 1"),
   category: z.string().default("GEN"),
   quota: z.string().default("AI"),
-  homeState: z.string().optional(),
+  homeState: z.string().optional().nullable(),
+  targetCourse: z.string().optional().nullable(),
 });
 
 export async function POST(req: NextRequest) {
@@ -22,7 +23,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { examSlug, rank, category, quota, homeState } = parsed.data;
+    const { examSlug, rank, category, quota, homeState, targetCourse } = parsed.data;
 
     // Find the exam
     const exam = await db.exam.findUnique({
@@ -30,16 +31,21 @@ export async function POST(req: NextRequest) {
     });
 
     if (!exam) {
-      return NextResponse.json({ error: "Exam not found" }, { status: 404 });
+      return NextResponse.json({ error: "Selected entrance examination not found." }, { status: 404 });
     }
 
     // Query historical cutoffs for this exam matching category & quotas
+    const whereConditions: any = {
+      examId: exam.id,
+      category: { equals: category, mode: "insensitive" },
+    };
+
+    if (quota && quota !== "ALL") {
+      whereConditions.quota = { in: [quota, "AI"] };
+    }
+
     const cutoffs = await db.examCutoff.findMany({
-      where: {
-        examId: exam.id,
-        category: { equals: category, mode: "insensitive" },
-        ...(quota !== "ALL" ? { quota: { in: [quota, "AI"] } } : {}),
-      },
+      where: whereConditions,
       include: {
         collegeCourse: {
           include: {
@@ -49,20 +55,47 @@ export async function POST(req: NextRequest) {
         },
       },
       orderBy: { closingRank: "asc" },
-      take: 50,
+      take: 60,
     });
 
-    const highProbability: any[] = [];
-    const mediumProbability: any[] = [];
-    const dreamOptions: any[] = [];
+    // Optional filter by target course / stream if specified
+    const filteredCutoffs = targetCourse && targetCourse !== "ALL"
+      ? cutoffs.filter((c) =>
+          c.collegeCourse.specialization.toLowerCase().includes(targetCourse.toLowerCase()) ||
+          c.collegeCourse.course.degree.toLowerCase().includes(targetCourse.toLowerCase()) ||
+          c.collegeCourse.course.stream.toLowerCase().includes(targetCourse.toLowerCase())
+        )
+      : cutoffs;
 
-    cutoffs.forEach((item) => {
+    if (filteredCutoffs.length === 0) {
+      return NextResponse.json({
+        success: true,
+        insufficientData: true,
+        message: "Sufficient verified historical cutoff data is not currently available for this exact combination. Predictions cannot be reliably determined. Please consult an official admissions counselor.",
+        query: { examSlug, rank, category, quota, homeState, targetCourse },
+        totalFound: 0,
+        predictions: {
+          highChance: [],
+          moderateChance: [],
+          lowChance: [],
+        },
+      });
+    }
+
+    const highProbability: any[] = [];
+    const moderateProbability: any[] = [];
+    const lowProbability: any[] = [];
+
+    filteredCutoffs.forEach((item) => {
       const closing = item.closingRank || 999999;
       const option = {
+        id: item.id,
         collegeName: item.collegeCourse.college.name,
+        collegeShortName: item.collegeCourse.college.shortName,
         collegeSlug: item.collegeCourse.college.slug,
         city: item.collegeCourse.college.city,
         state: item.collegeCourse.college.state,
+        logoUrl: item.collegeCourse.college.logoUrl,
         nirfRank: item.collegeCourse.college.nirfRank,
         degree: item.collegeCourse.course.degree,
         specialization: item.collegeCourse.specialization,
@@ -73,25 +106,28 @@ export async function POST(req: NextRequest) {
         quota: item.quota,
         closingRank: closing,
         openingRank: item.openingRank,
+        eligibility: item.collegeCourse.eligibilityCriteria,
       };
 
+      // Classification based on student AIR compared to closing rank
       if (closing >= rank * 1.15) {
-        highProbability.push(option);
+        highProbability.push({ ...option, chanceCategory: "High Chance" });
       } else if (closing >= rank * 0.9) {
-        mediumProbability.push(option);
+        moderateProbability.push({ ...option, chanceCategory: "Moderate Chance" });
       } else {
-        dreamOptions.push(option);
+        lowProbability.push({ ...option, chanceCategory: "Low Chance" });
       }
     });
 
     return NextResponse.json({
       success: true,
-      query: { examSlug, rank, category, quota, homeState },
-      totalFound: cutoffs.length,
+      insufficientData: false,
+      query: { examSlug, rank, category, quota, homeState, targetCourse },
+      totalFound: filteredCutoffs.length,
       predictions: {
-        highChance: highProbability.slice(0, 10),
-        mediumChance: mediumProbability.slice(0, 10),
-        dreamChance: dreamOptions.slice(0, 10),
+        highChance: highProbability.slice(0, 15),
+        moderateChance: moderateProbability.slice(0, 15),
+        lowChance: lowProbability.slice(0, 15),
       },
     });
   } catch (error) {
@@ -102,4 +138,3 @@ export async function POST(req: NextRequest) {
     );
   }
 }
-

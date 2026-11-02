@@ -52,14 +52,20 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     "/qna",
   ];
 
-  const collegeRoutes: MetadataRoute.Sitemap = colleges.flatMap((c) =>
-    collegeTabs.map((tab) => ({
+  const collegeRoutes: MetadataRoute.Sitemap = colleges.flatMap((c) => [
+    {
+      url: `${baseUrl}/colleges/${c.slug}`,
+      lastModified: c.updatedAt,
+      changeFrequency: "daily" as const,
+      priority: 0.9,
+    },
+    ...collegeTabs.map((tab) => ({
       url: `${baseUrl}/college/${c.slug}${tab}`,
       lastModified: c.updatedAt,
-      changeFrequency: tab === "" ? "daily" : "weekly",
+      changeFrequency: tab === "" ? ("daily" as const) : ("weekly" as const),
       priority: tab === "" ? 0.9 : 0.7,
-    }))
-  );
+    })),
+  ]);
 
   // Blog posts
   const blogs = await db.blogPost.findMany({

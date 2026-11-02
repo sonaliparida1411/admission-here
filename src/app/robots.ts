@@ -7,16 +7,29 @@ export default function robots(): MetadataRoute.Robots {
     rules: [
       {
         userAgent: "*",
-        allow: "/",
-        disallow: ["/admin/", "/partner/", "/api/auth/"],
+        allow: ["/", "/colleges/", "/college/", "/blog/", "/llms.txt", "/llms-full.txt"],
+        disallow: [
+          "/admin/",
+          "/partner/",
+          "/api/v1/admin/",
+          "/api/v1/cms/",
+          "/api/auth/",
+          "/api/v1/leads/",
+        ],
       },
       {
-        userAgent: ["GPTBot", "PerplexityBot", "ClaudeBot", "Applebot-Extended"],
-        allow: ["/", "/llms.txt", "/llms-full.txt", "/colleges/", "/blog/"],
-        disallow: ["/admin/", "/partner/"],
+        userAgent: [
+          "GPTBot",
+          "PerplexityBot",
+          "ClaudeBot",
+          "Applebot-Extended",
+          "Google-Extended",
+          "CCBot",
+        ],
+        allow: ["/", "/llms.txt", "/llms-full.txt", "/colleges/", "/college/", "/blog/"],
+        disallow: ["/admin/", "/partner/", "/api/"],
       },
     ],
     sitemap: `${baseUrl}/sitemap.xml`,
   };
 }
-
