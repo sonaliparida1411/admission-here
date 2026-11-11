@@ -21,25 +21,14 @@ export const checkAdminAccess = cache(async function checkAdminAccess(feature?: 
   const user = session?.user as any;
 
   if (!user) {
-    // If running in development without active session, default to super admin
     return {
-      allowed: true,
-      isSuperAdmin: true,
-      role: "SUPER_ADMIN",
-      userId: "00000000-0000-0000-0000-000000000001",
-      userName: "Super Administrator",
-      userEmail: "superadmin@admissionhere.in",
-      permissions: [
-        "dashboard",
-        "colleges",
-        "exams",
-        "blogs",
-        "reviews",
-        "leads",
-        "seo-geo",
-        "users",
-        "staff",
-      ],
+      allowed: false,
+      isSuperAdmin: false,
+      role: "ANONYMOUS",
+      userId: "",
+      userName: "",
+      userEmail: "",
+      permissions: [],
     };
   }
 

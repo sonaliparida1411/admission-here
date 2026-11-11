@@ -1,0 +1,48 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: admission-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-bps}
+      POSTGRES_DB: ${POSTGRES_DB:-admission_db}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-admission_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - admission-network
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: admission-here-app
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-bps}@postgres:5432/${POSTGRES_DB:-admission_db}?schema=public
+      - NEXTAUTH_URL=${NEXTAUTH_URL:-http://localhost:3000}
+      - AUTH_SECRET=${AUTH_SECRET:-default-secret-dev-random-admissions-hub-key}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - admission-network
+
+volumes:
+  pgdata:
+    driver: local
+
+networks:
+  admission-network:
+    driver: bridge
+

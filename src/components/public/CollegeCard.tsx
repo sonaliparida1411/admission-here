@@ -160,15 +160,15 @@ export function CollegeCard({ college, isCompared, onToggleCompare }: CollegeCar
           <div className="flex items-center gap-2 ml-auto">
             <button
               onClick={() => openModal(LeadCtaType.DOWNLOAD_BROCHURE)}
-              className="px-3 py-1.5 rounded-lg border bg-background hover:bg-accent text-foreground font-medium transition-colors flex items-center gap-1 cursor-pointer"
+              className="px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-semibold transition-colors flex items-center gap-1 cursor-pointer"
             >
-              <Download className="w-3.5 h-3.5 text-blue-600" />
+              <Download className="w-3.5 h-3.5 text-[#1a3068]" />
               <span className="hidden sm:inline">Brochure</span>
             </button>
 
             <button
               onClick={() => openModal(LeadCtaType.APPLY_NOW)}
-              className="px-3.5 py-1.5 rounded-lg bg-primary text-primary-foreground font-semibold hover:bg-primary/90 transition-colors flex items-center gap-1 cursor-pointer shadow-xs"
+              className="px-3.5 py-1.5 rounded-lg bg-[#C41E1E] text-white font-bold hover:bg-[#a81919] transition-colors flex items-center gap-1 cursor-pointer shadow-xs active:scale-95"
             >
               <span>Apply Now</span>
               <ChevronRight className="w-3.5 h-3.5" />

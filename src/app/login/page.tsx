@@ -58,9 +58,9 @@ function LoginForm() {
           <Image
             src="/logo.png"
             alt="Admission Here"
-            width={160}
-            height={44}
-            className="h-10 w-auto object-contain"
+            width={220}
+            height={55}
+            className="h-12 w-auto object-contain"
           />
         </Link>
         <h1 className="text-xl font-bold text-foreground">Sign In to Your Account</h1>

@@ -24,6 +24,14 @@ const config: Config = {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",
         },
+        brand: {
+          navy: "#1a3068",
+          red: "#C41E1E",
+          green: "#1F8040",
+          lightBlue: "#f0f4ff",
+          lightRed: "#fff1f1",
+          lightGreen: "#f0fdf4",
+        },
         secondary: {
           DEFAULT: "hsl(var(--secondary))",
           foreground: "hsl(var(--secondary-foreground))",
