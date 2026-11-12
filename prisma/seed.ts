@@ -1,7 +1,9 @@
 import { PrismaClient, UserRole, OwnershipType, BlogCategory, PostStatus, LeadCtaType, LeadStatus } from "@prisma/client";
-import bcrypt from "bcryptjs";
 
 const db = new PrismaClient();
+
+// Precomputed bcrypt hash for default test password: "Password@123"
+const defaultPasswordHash = "$2b$10$HfTqQGmFuZuzET64tyeNQOiP7cHqXifAuWg08vSCUKSc3wUa4cOyy";
 
 async function main() {
   console.log("🌱 Starting Database Seed for Higher Education Discovery Platform...");
@@ -22,7 +24,6 @@ async function main() {
   console.log("🧹 Cleaned database tables.");
 
   // 2. Create Users with RBAC
-  const defaultPasswordHash = await bcrypt.hash("Password@123", 10);
 
   const superAdmin = await db.user.create({
     data: {

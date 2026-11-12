@@ -1,11 +1,12 @@
 import { PrismaClient, UserRole } from "@prisma/client";
-import bcrypt from "bcryptjs";
 
 const db = new PrismaClient();
 
+// Precomputed bcrypt hash for default test password: "Password@123"
+const defaultPasswordHash = "$2b$10$HfTqQGmFuZuzET64tyeNQOiP7cHqXifAuWg08vSCUKSc3wUa4cOyy";
+
 async function main() {
   console.log("Adding default superadmin and sample staff account...");
-  const defaultPasswordHash = await bcrypt.hash("Password@123", 10);
 
   // 1. Super Admin
   await db.user.upsert({
