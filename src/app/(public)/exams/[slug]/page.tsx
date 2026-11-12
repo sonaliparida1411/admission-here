@@ -5,7 +5,7 @@ import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { BookOpen, Calendar, Clock, Award, Building2, ChevronRight } from "lucide-react";
 import Link from "next/link";
 
-export const revalidate = 3600;
+export const dynamic = "force-dynamic";
 
 interface ExamPageProps {
   params: Promise<{ slug: string }>;

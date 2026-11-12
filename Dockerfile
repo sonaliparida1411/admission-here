@@ -16,7 +16,7 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
-ENV DATABASE_URL="postgresql://postgres:bps@postgres:4329/admission_db?schema=public"
+ENV DATABASE_URL="postgresql://postgres:bps@postgres:5432/admission_db?schema=public"
 RUN npx prisma generate
 RUN npm run build
 

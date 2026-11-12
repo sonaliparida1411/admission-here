@@ -3,18 +3,16 @@ services:
     image: postgres:16-alpine
     container_name: admission-postgres
     restart: unless-stopped
-    command: -p 4329
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-bps}
       POSTGRES_DB: ${POSTGRES_DB:-admission_db}
-      PGPORT: ${POSTGRES_PORT:-4329}
     ports:
-      - "${POSTGRES_PORT:-4329}:4329"
+      - "${POSTGRES_PORT:-4329}:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -p 4329 -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-admission_db}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-admission_db}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -32,7 +30,7 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=3014
-      - DATABASE_URL=${DATABASE_URL:-postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-bps}@postgres:4329/${POSTGRES_DB:-admission_db}?schema=public}
+      - DATABASE_URL=${DATABASE_URL:-postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-bps}@postgres:5432/${POSTGRES_DB:-admission_db}?schema=public}
       - NEXTAUTH_URL=${NEXTAUTH_URL:-http://localhost:3014}
       - AUTH_SECRET=${AUTH_SECRET:-default-secret-dev-random-admissions-hub-key}
       - NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL:-http://localhost:3014}

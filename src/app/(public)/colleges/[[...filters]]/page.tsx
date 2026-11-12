@@ -9,7 +9,7 @@ import { Building2 } from "lucide-react";
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
 
-export const revalidate = 3600;
+export const dynamic = "force-dynamic";
 
 interface CollegesPageProps {
   params: Promise<{ filters?: string[] }>;

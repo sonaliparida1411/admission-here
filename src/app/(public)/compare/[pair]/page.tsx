@@ -6,7 +6,7 @@ import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { Scale, Award, ShieldCheck, MapPin, Building2, Briefcase, IndianRupee } from "lucide-react";
 import Link from "next/link";
 
-export const revalidate = 3600;
+export const dynamic = "force-dynamic";
 
 interface ComparePageProps {
   params: Promise<{ pair: string }>;

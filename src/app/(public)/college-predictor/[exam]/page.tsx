@@ -5,7 +5,7 @@ import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { PredictorForm } from "@/components/public/PredictorForm";
 import { Sparkles, Layers, ShieldCheck, Award } from "lucide-react";
 
-export const revalidate = 3600;
+export const dynamic = "force-dynamic";
 
 interface PredictorPageProps {
   params: Promise<{ exam: string }>;

@@ -29,7 +29,7 @@ import {
   MapPin
 } from "lucide-react";
 
-export const revalidate = 3600; // ISR 1 hour
+export const dynamic = "force-dynamic";
 
 export const metadata = constructSeoMetadata({
   title: "Top Colleges, Cutoffs, Admissions & AI Counselor Platform",

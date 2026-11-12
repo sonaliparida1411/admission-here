@@ -6,7 +6,7 @@ import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { BlogCategory } from "@prisma/client";
 import { User, Radio } from "lucide-react";
 
-export const revalidate = 3600;
+export const dynamic = "force-dynamic";
 
 interface CategoryPageProps {
   params: Promise<{ cat: string }>;

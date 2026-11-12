@@ -12,7 +12,7 @@ import { RichBlogRenderer } from "@/components/blog/RichBlogRenderer";
 import { Calendar, User, Radio, Eye, Clock, HelpCircle } from "lucide-react";
 import type { LiveUpdateItem } from "@/components/blog/LiveBlogTicker";
 
-export const revalidate = 3600;
+export const dynamic = "force-dynamic";
 
 interface BlogPostPageProps {
   params: Promise<{ slug: string }>;

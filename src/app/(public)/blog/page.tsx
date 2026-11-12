@@ -4,7 +4,7 @@ import { constructSeoMetadata } from "@/lib/seo/metadata";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { Sparkles, Radio, Calendar, User, ArrowRight, Tag } from "lucide-react";
 
-export const revalidate = 3600;
+export const dynamic = "force-dynamic";
 
 export const metadata = constructSeoMetadata({
   title: "AdmissionsHub Editorial & Live Exam Updates 2026",
