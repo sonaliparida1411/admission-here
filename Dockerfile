@@ -29,6 +29,9 @@ ENV NEXT_TELEMETRY_DISABLED=1
 ENV PORT=3014
 ENV HOSTNAME="0.0.0.0"
 
+# Install prisma CLI matching project version (v6) and tsx for seeding
+RUN npm install -g prisma@6.4.1 tsx
+
 # Don't run production as root
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
