@@ -32,9 +32,11 @@ services:
       - PORT=3014
       - DATABASE_URL=${DATABASE_URL:-postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-bps}@postgres:5432/${POSTGRES_DB:-admission_db}?schema=public}
       - DIRECT_URL=${DIRECT_URL:-postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-bps}@postgres:5432/${POSTGRES_DB:-admission_db}?schema=public}
-      - NEXTAUTH_URL=${NEXTAUTH_URL:-http://localhost:3014}
+      - NEXTAUTH_URL=${NEXTAUTH_URL:-https://demo.admissionhere.in}
+      - AUTH_URL=${AUTH_URL:-https://demo.admissionhere.in}
+      - AUTH_TRUST_HOST=true
       - AUTH_SECRET=${AUTH_SECRET:-default-secret-dev-random-admissions-hub-key}
-      - NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL:-http://localhost:3014}
+      - NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL:-https://demo.admissionhere.in}
     depends_on:
       postgres:
         condition: service_healthy
