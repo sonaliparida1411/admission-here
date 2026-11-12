@@ -73,22 +73,43 @@ Built with **Next.js 15 (App Router)**, **React 19**, **TypeScript**, and **Post
 
 ## 🏃‍♂️ How to Run
 
-1. **Start PostgreSQL**:
-   Ensure PostgreSQL is running on port 5432 with database `admission_db`.
+### Option A: Using Docker (Recommended for Production Deployment)
 
-2. **Generate Prisma Client & Seed Data**:
+1. **Start all services (PostgreSQL on port 4329 and Web App on port 3014)**:
    ```bash
+   docker compose up -d --build
+   ```
+
+2. **Access the application**:
+   Open [http://localhost:3014](http://localhost:3014) in your browser.
+
+---
+
+### Option B: Local Development
+
+1. **Start PostgreSQL**:
+   Ensure PostgreSQL is running on port **4329** with database `admission_db`.
+
+2. **Configure Environment Variables**:
+   Copy `.env.example` to `.env`:
+   ```bash
+   cp .env.example .env
+   ```
+
+3. **Generate Prisma Client & Seed Data**:
+   ```bash
+   npm install
    npx prisma generate
    npx tsx prisma/seed.ts
    ```
 
-3. **Start Development Server**:
+4. **Start Development Server**:
    ```bash
    npm run dev
    ```
-   Open [http://localhost:3000](http://localhost:3000) in your browser.
+   Open [http://localhost:3014](http://localhost:3014) in your browser.
 
-4. **Production Build & Start**:
+5. **Production Build & Start**:
    ```bash
    npm run build
    npm run start
